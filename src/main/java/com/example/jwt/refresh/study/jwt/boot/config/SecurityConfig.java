@@ -86,6 +86,7 @@ public class SecurityConfig {
                         .antMatchers("/member/**").permitAll()
                         .antMatchers("/file/**").permitAll()
                         .antMatchers("/auth/**").permitAll()
+                        .antMatchers("/api/**").permitAll()
                         .antMatchers("/**/adm/**").hasAnyRole("ADMIN")
                         .anyRequest().authenticated()
                         .and()

@@ -146,7 +146,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public Boolean signOut(String accessToken) throws Exception {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        PrincipalDetails userDetails = (PrincipalDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         accessToken = accessToken.replace("Bearer ", "");
         Integer deletedCnt = authTokenRepository.deleteByAccessToken(accessToken);
@@ -165,7 +165,7 @@ public class AuthServiceImpl implements AuthService {
      */
     @Transactional(readOnly = true)
     public String getUserName(String accessToken) throws Exception {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        PrincipalDetails userDetails = (PrincipalDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         return userDetails.getEmail();
     }
@@ -321,7 +321,11 @@ public class AuthServiceImpl implements AuthService {
         }
 
 
+
         PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+        Set<String> authorities = principalDetails.getAuthorities()
+                .stream().map(role -> role.getAuthority())
+                .collect(Collectors.toSet());
 
         String accessToken = jwtUtils.generateAccessToken(authentication);
         String refreshToken = jwtUtils.generateRefreshToken(authentication);
@@ -334,6 +338,16 @@ public class AuthServiceImpl implements AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+
+        if(!authorities.contains("ROLE_ADMIN")) {
+            Boolean isLogin = authTokenRepository.existsByUserSeq(principalDetails.getMemberSeq());
+            if(isLogin) {
+                log.info("기존에 로그인된 일반 사용자입니다. DB값을 추출후 재삽입합니다.");
+                authTokenRepository.deleteByUserSeq(principalDetails.getMemberSeq());
+            }
+        } else {
+            log.info("관리자는 중복 로그인 체크를 하지 않습니다.");
+        }
 
         authTokenRepository.save(authTokenEntity);
 
@@ -371,6 +385,7 @@ public class AuthServiceImpl implements AuthService {
         else {
             log.info("허용되지 않은 접근입니다.");
         }
+
 
         log.info("oauth.getEmail {}", oAuth2UserInfo.getEmail());
         log.info("oauth.getNickname {}", oAuth2UserInfo.getNickName());

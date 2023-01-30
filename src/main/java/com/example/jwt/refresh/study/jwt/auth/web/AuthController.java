@@ -5,6 +5,7 @@ import com.example.jwt.refresh.study.jwt.auth.dto.request.SignInRequestDto;
 import com.example.jwt.refresh.study.jwt.auth.dto.request.SignUpRequestDto;
 import com.example.jwt.refresh.study.jwt.auth.service.AuthService;
 import com.example.jwt.refresh.study.jwt.boot.util.JwtUtils;
+import com.example.jwt.refresh.study.jwt.example.service.WasmTestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +24,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtUtils jwtUtils;
+    private final WasmTestService wasmTestService;
+
+    @GetMapping("wasm")
+    public ResponseEntity<String> wasmTest() {
+        return new ResponseEntity<>(wasmTestService.testWasm(), HttpStatus.OK);
+    }
 
     @PostMapping("/signin")
     public ResponseEntity<?> signIn(@RequestBody SignInRequestDto signInRequestDto) throws Exception {
@@ -30,7 +37,7 @@ public class AuthController {
     }
 
     @PostMapping("/signout")
-    public ResponseEntity<?> signOut(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws Exception {
+    public ResponseEntity<?> signOut(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) throws Exception {
         return new ResponseEntity<>(authService.signOut(authorization), HttpStatus.OK);
     }
 
@@ -40,7 +47,7 @@ public class AuthController {
     }
 
     @PostMapping("getusername")
-    public ResponseEntity<?> getUserName(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws Exception {
+    public ResponseEntity<?> getUserName(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) throws Exception {
         return new ResponseEntity<>(authService.getUserName(authorization), HttpStatus.OK);
     }
 
