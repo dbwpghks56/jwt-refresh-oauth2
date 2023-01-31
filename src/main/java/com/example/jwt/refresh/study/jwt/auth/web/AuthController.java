@@ -16,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.*;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -88,6 +90,51 @@ public class AuthController {
             return new ResponseEntity<>("", HttpStatus.OK);
         }
 
+    }
+
+    @PostMapping("/process")
+    public ResponseEntity<String> processss(@RequestBody(required = false) String pyScript) throws IOException, InterruptedException {
+        String randoom = UUID.randomUUID() + ".py";
+
+        String path2 = "C:\\Users\\wpghk\\Downloads\\jwtrefresh-91d0bc1cde9b278d3d7f7e4c640c9fa57893df1f\\study.jwt\\src\\main\\resources";
+        String filePath = "C:\\Users\\wpghk\\Downloads\\jwtrefresh-91d0bc1cde9b278d3d7f7e4c640c9fa57893df1f\\study.jwt\\src\\main\\resources\\"+randoom;
+
+        File file = new File(filePath);
+        if(!file.exists()) {
+            file.createNewFile();
+        }
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
+
+        writer.write(pyScript);
+
+        writer.flush();
+        writer.close();
+
+        if(file.exists()) {
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.directory(new File(path2));
+            builder.command("python", randoom);
+
+            Process process = builder.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            StringBuffer line = new StringBuffer();
+            String mola = null;
+            while((mola = reader.readLine()) != null) {
+                line.append(mola+"\n");
+                log.info(line.toString());
+            }
+
+            if(process != null) {
+                process.destroy();
+            }
+            file.delete();
+            return new ResponseEntity<>(line.toString(), HttpStatus.OK);
+        } else {
+            return null;
+        }
 
     }
 }
