@@ -8,6 +8,7 @@ import com.example.jwt.refresh.study.jwt.boot.util.JwtUtils;
 import com.example.jwt.refresh.study.jwt.example.service.WasmTestService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.python.util.PythonInterpreter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -77,5 +78,16 @@ public class AuthController {
     @GetMapping("/naver")
     public ResponseEntity<?> signinNaver(@RequestParam String code, HttpServletRequest request) {
         return new ResponseEntity<>(authService.oauthLogin(code,request.getServletPath()), HttpStatus.OK);
+    }
+
+    @GetMapping("/python")
+    public ResponseEntity<?> runPython(@RequestParam String pyScript) {
+        try(PythonInterpreter pythonInterpreter = new PythonInterpreter()) {
+            pythonInterpreter.exec(pyScript);
+
+            return new ResponseEntity<>("", HttpStatus.OK);
+        }
+
+
     }
 }

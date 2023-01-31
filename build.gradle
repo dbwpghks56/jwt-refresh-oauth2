@@ -49,7 +49,7 @@ dependencies {
 
 // https://mvnrepository.com/artifact/de.inetsoftware/jwebassembly-compiler
 	implementation group: 'de.inetsoftware', name: 'jwebassembly-compiler', version: '0.4'
-
+	implementation 'org.python:jython-slim:2.7.3'
 
 	annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jpa" // querydsl JPAAnnotationProcessor 사용 지정
 	annotationProcessor "jakarta.annotation:jakarta.annotation-api" // java.lang.NoClassDefFoundError (javax.annotation.Generated) 대응 코드
