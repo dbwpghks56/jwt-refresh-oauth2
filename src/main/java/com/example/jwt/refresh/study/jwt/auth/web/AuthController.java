@@ -1,13 +1,20 @@
 package com.example.jwt.refresh.study.jwt.auth.web;
 
 import com.example.jwt.refresh.study.jwt.auth.dto.request.AccessTokenRefreshRequestDto;
+import com.example.jwt.refresh.study.jwt.auth.dto.request.ApiTest;
 import com.example.jwt.refresh.study.jwt.auth.dto.request.SignInRequestDto;
 import com.example.jwt.refresh.study.jwt.auth.dto.request.SignUpRequestDto;
 import com.example.jwt.refresh.study.jwt.auth.service.AuthService;
+import com.example.jwt.refresh.study.jwt.boot.exception.RestException;
 import com.example.jwt.refresh.study.jwt.boot.util.JwtUtils;
 import com.example.jwt.refresh.study.jwt.example.service.WasmTestService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
+import okio.ByteString;
+import org.hibernate.type.UUIDCharType;
+import org.json.JSONObject;
 import org.python.antlr.ast.While;
 import org.python.util.PythonInterpreter;
 import org.springframework.http.HttpHeaders;
@@ -15,9 +22,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
+import java.rmi.RemoteException;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -26,7 +36,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 public class AuthController {
-
+    public static final String FILE_PATH = "C:\\Users\\wpghk\\Downloads\\jwtrefresh-91d0bc1cde9b278d3d7f7e4c640c9fa57893df1f\\study.jwt\\src\\main\\resources";
     private final AuthService authService;
     private final JwtUtils jwtUtils;
     private final WasmTestService wasmTestService;
@@ -94,74 +104,140 @@ public class AuthController {
 
     }
 
-    @PostMapping("/process")
-    public ResponseEntity<String> processss(@RequestBody(required = false) String pyScript) throws IOException, InterruptedException {
-        String randoom =  "Test3.java";
-        String randoom2 = randoom.replace(".java", "");
+    @PostMapping("/process/python")
+    public ResponseEntity<String> pyScript(@RequestBody(required = false) String pyScript) throws IOException {
+        String pyName = UUID.randomUUID() + ".py";
 
-        String path2 = "C:\\Users\\wpghk\\Downloads\\jwtrefresh-91d0bc1cde9b278d3d7f7e4c640c9fa57893df1f\\study.jwt\\src\\main\\resources";
+        File pyFile = new File(FILE_PATH + "\\" + pyName);
 
-        File file = new File(path2 +"\\" + randoom);
-        if(!file.exists()) {
-            file.createNewFile();
+        if(!pyFile.exists()) {
+            pyFile.createNewFile();
         }
 
-        BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
+        BufferedWriter pyCode = new BufferedWriter(new FileWriter(pyFile, true));
 
-        writer.write(pyScript);
+        pyCode.write(pyScript);
 
-        writer.flush();
-        writer.close();
+        pyCode.flush();
+        pyCode.close();
 
-        if(file.exists()) {
-            ProcessBuilder builder = new ProcessBuilder();
-            builder.directory(new File(path2));
-            builder.command("javac", randoom);
-            builder.start();
-            builder.command("java", "Test");
-            Process process = builder.start();
+        if(pyFile.exists()) {
+            ProcessBuilder pyRun = new ProcessBuilder();
+            pyRun.directory(new File(FILE_PATH));
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String result = returnProcess("python", pyName, pyRun).toString();
 
-            StringBuffer ttt = new StringBuffer();
-            String mola = null;
-            while ((mola = reader.readLine()) != null) {
-                ttt.append(mola);
-                log.info(ttt.toString());
-            }
+            pyFile.delete();
 
-            if (process != null) {
-                process.destroy();
-            }
+            return new ResponseEntity<>(result,HttpStatus.OK);
+        }
 
+        throw new RestException(HttpStatus.BAD_REQUEST, "파일이 만들어지지 않았습니다.");
+    }
+
+    public StringBuffer returnProcess(String command, String processName, ProcessBuilder processCover) throws IOException {
+        processCover.command(command, processName);
+
+        Process classRun = processCover.start();
+
+        BufferedReader resultReader = new BufferedReader(new InputStreamReader(classRun.getInputStream()));
+
+        StringBuffer resultLine = new StringBuffer();
+        String result = null;
+        while ((result = resultReader.readLine()) != null) {
+            resultLine.append(result).append("\n");
+        }
+
+        if (classRun != null) {
+            classRun.destroy();
+        }
+
+        return resultLine;
+    }
+
+    @PostMapping("/apitest")
+    public ResponseEntity<?> apiTest(@RequestBody ApiTest apiTest) {
+        log.error(apiTest.getSource());
+//        OkHttpClient client = new OkHttpClient();
+////        String param = "grant_type=authorization_code&client_id="+test.get("client_id")+"&redirect_uri="+test.get("redirect_uri")+"&client_secret="+test.get("client_secret")+"&code="+code;
+//
+//        okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(apiTest.toString(), MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"));
+//
+//        Request request = new Request.Builder()
+//                .url("https://40bf7a03.compilers.sphere-engine.com/api/v4/submissions?access_token=6f29aa953cd0acfd4d5ebbaa38974bb7")
+//                .post(requestBody)
+//                .build();
+//
+//        try(Response response = client.newCall(request).execute()) {
+//            String responseResult = response.body().string();
+//
+//            response.close();
+//            JSONObject responseFromJson = new JSONObject(responseResult);
+//            log.info(responseFromJson.toString());
+//            Map<String, Object> responseMap = new ObjectMapper().readValue(responseFromJson.toString(), Map.class);
+//
+//            return new ResponseEntity<>(responseMap, HttpStatus.OK);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            throw new RestException(HttpStatus.BAD_REQUEST, "");
+//        }
+        return null;
+    }
+
+    @PostMapping("/process/java")
+    public ResponseEntity<String> processss(@RequestBody(required = false) String javaCode) throws IOException, InterruptedException {
+        String codeClassName = UUID.randomUUID().toString().replace("-", "");
+        while(Character.isDigit(codeClassName.charAt(0))) {
+            codeClassName = UUID.randomUUID().toString().replace("-", "");
+        }
+
+        javaCode = javaCode.replace(javaCode.split(" ")[2], codeClassName);
+        log.info(javaCode);
+
+        String javaDotJava =  codeClassName + ".java";
+
+        File javaFile = new File(FILE_PATH +"\\" + javaDotJava);
+
+        if(!javaFile.exists()) {
+            javaFile.createNewFile();
+        }
+
+        BufferedWriter jCode = new BufferedWriter(new FileWriter(javaFile, true));
+
+        jCode.write(javaCode);
+
+        jCode.flush();
+        jCode.close();
+
+        if(javaFile.exists()) {
+            ProcessBuilder javaRun = new ProcessBuilder();
+
+            javaRun.directory(new File(FILE_PATH));
+            javaRun.command("javac", javaDotJava);
+            javaRun.start();
+
+            StringBuffer doneResult = returnProcess("java", "Test", javaRun);
+
+            File javaClass = new File(FILE_PATH +"\\" + codeClassName + ".class");
 //            Thread.sleep(3000);
-            while(!(ttt.equals("done"))) {
 
-                if(new File(path2 +"\\" + "Test3.class").exists()){
-                    builder.command("java", "Test3");
-                    Process process2 = builder.start();
+            while ((doneResult.toString().contains("done"))) {
 
-                    BufferedReader reader2 = new BufferedReader(new InputStreamReader(process2.getInputStream()));
+                if (javaClass.exists()) {
+                    log.info(codeClassName);
+                    String resultLine = returnProcess("java", codeClassName, javaRun).toString();
 
-                    StringBuffer line2 = new StringBuffer();
-                    String mola2 = null;
-                    while ((mola2 = reader2.readLine()) != null) {
-                        line2.append(mola2).append("\n");
-                    }
+                    javaFile.delete();
+                    javaClass.delete();
 
-                    if (process2 != null) {
-                        process2.destroy();
-                    }
-
-                    file.delete();
-                    new File(path2 +"\\" + "Test3.class").delete();
-
-                    return new ResponseEntity<>(line2.toString(), HttpStatus.OK);
+                    return new ResponseEntity<>(resultLine, HttpStatus.OK);
                 }
             }
-           return null;
+
+            javaFile.delete();
+            throw new RestException(HttpStatus.BAD_REQUEST, "컴파일된 파일이 만들어지지 않았습니다.");
         } else {
-            return null;
+            throw new RestException(HttpStatus.BAD_REQUEST, "파일이 만들어지지 않았습니다.");
         }
 
     }
