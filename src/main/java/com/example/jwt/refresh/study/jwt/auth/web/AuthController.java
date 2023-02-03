@@ -155,38 +155,11 @@ public class AuthController {
         return resultLine;
     }
 
-    @PostMapping("/apitest")
-    public ResponseEntity<?> apiTest(@RequestBody ApiTest apiTest) {
-        log.error(apiTest.getSource());
-//        OkHttpClient client = new OkHttpClient();
-////        String param = "grant_type=authorization_code&client_id="+test.get("client_id")+"&redirect_uri="+test.get("redirect_uri")+"&client_secret="+test.get("client_secret")+"&code="+code;
-//
-//        okhttp3.RequestBody requestBody = okhttp3.RequestBody.create(apiTest.toString(), MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"));
-//
-//        Request request = new Request.Builder()
-//                .url("https://40bf7a03.compilers.sphere-engine.com/api/v4/submissions?access_token=6f29aa953cd0acfd4d5ebbaa38974bb7")
-//                .post(requestBody)
-//                .build();
-//
-//        try(Response response = client.newCall(request).execute()) {
-//            String responseResult = response.body().string();
-//
-//            response.close();
-//            JSONObject responseFromJson = new JSONObject(responseResult);
-//            log.info(responseFromJson.toString());
-//            Map<String, Object> responseMap = new ObjectMapper().readValue(responseFromJson.toString(), Map.class);
-//
-//            return new ResponseEntity<>(responseMap, HttpStatus.OK);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            throw new RestException(HttpStatus.BAD_REQUEST, "");
-//        }
-        return null;
-    }
-
     @PostMapping("/process/java")
     public ResponseEntity<String> processss(@RequestBody(required = false) String javaCode) throws IOException, InterruptedException {
         String codeClassName = UUID.randomUUID().toString().replace("-", "");
+
+        // 자바의 경우 클래스 이름이 수로 시작되면 안 되기 때문에 확인을 하고 수로 시작하게 되면 다시 할당해준다.
         while(Character.isDigit(codeClassName.charAt(0))) {
             codeClassName = UUID.randomUUID().toString().replace("-", "");
         }
