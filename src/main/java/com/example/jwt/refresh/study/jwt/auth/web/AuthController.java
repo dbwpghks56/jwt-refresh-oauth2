@@ -8,18 +8,24 @@ import com.example.jwt.refresh.study.jwt.auth.service.AuthService;
 import com.example.jwt.refresh.study.jwt.boot.exception.RestException;
 import com.example.jwt.refresh.study.jwt.boot.util.JwtUtils;
 import com.example.jwt.refresh.study.jwt.example.service.WasmTestService;
+import com.example.jwt.refresh.study.jwt.kafka.sender.KafkaSender;
+import com.example.jwt.refresh.study.jwt.kafka.service.KafkaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import okio.ByteString;
+import org.apache.kafka.clients.admin.*;
 import org.hibernate.type.UUIDCharType;
 import org.json.JSONObject;
 import org.python.antlr.ast.While;
 import org.python.util.PythonInterpreter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,9 +33,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.rmi.RemoteException;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -38,7 +42,11 @@ import java.util.UUID;
 public class AuthController {
     public static final String FILE_PATH = "C:\\Users\\wpghk\\Downloads\\jwtrefresh-91d0bc1cde9b278d3d7f7e4c640c9fa57893df1f\\study.jwt\\src\\main\\resources";
     private final AuthService authService;
+    private final KafkaService kafkaService;
+
     private final JwtUtils jwtUtils;
+    private final KafkaSender kafkaSender;
+    private static final String TOPIC = "my-topic";
     private final WasmTestService wasmTestService;
 
     @GetMapping("wasm")
@@ -213,5 +221,35 @@ public class AuthController {
             throw new RestException(HttpStatus.BAD_REQUEST, "파일이 만들어지지 않았습니다.");
         }
 
+    }
+
+    @PostMapping("/kafka/{message}/{topic}")
+    public String sender(@PathVariable("message") final String message, @PathVariable("topic") final String topic) {
+        Properties config = new Properties();
+        config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        try (AdminClient adminClient = AdminClient.create(config)) {
+            ListTopicsResult listTopicsResult = adminClient.listTopics();
+            Collection<TopicListing> topics = listTopicsResult.listings().get();
+            boolean topicExists = topics.stream().anyMatch(topic2 -> topic2.name().equals(topic));
+
+            if(topicExists) {
+                log.info("이미 있는 topic");
+                kafkaSender.send(topic, message);
+                kafkaService.consume(topic, message);
+                return "Published Success";
+            } else {
+                log.info("없는 topic");
+                NewTopic newTopic = new NewTopic(topic, 1, (short) 1);
+                adminClient.createTopics(Collections.singletonList(newTopic));
+
+                kafkaSender.send(topic, message);
+                kafkaService.consume(topic, message);
+                return "Published Success";
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+
+        return "Published Success";
     }
 }

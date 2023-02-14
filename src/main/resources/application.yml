@@ -1,1 +1,104 @@
 
+# Database
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/sys?serverTimezone=Asia/Seoul
+    username: root
+    password: ingyoe114^
+
+  # JPA
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 1000
+        order_insert: true
+        default_batch_fetch_size: 1000
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+    open-in-view: false
+
+  logging:
+    level:
+      org.hibernate.SQL: debug
+      org.hibernate.type: trace # ???? ????.
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            clientId: 791e75dbbfb43941fcd33b57d00f9a8a
+            clientSecret: eg2q2cQs0vPaoRZlZxXMzIrrrEMKPHju
+            scope:
+              - profile_nickname
+              - account_email
+            redirectUri: "http://localhost:8080/auth/kakao"
+            authorizationGrantType: authorization_code
+            clientName: kakao
+            clientAuthenticationMethod: POST
+          google:
+            clientId: 280730921528-4jo6oejrece86657tpd0kggbk6p2ij05.apps.googleusercontent.com
+            clientSecret: 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
+            redirectUri: "http://localhost:8080/auth/google"
+            authorizationGrantType: authorization_code
+            clientName: google
+            scope:
+              - https://www.googleapis.com/auth/userinfo.profile
+              - https://www.googleapis.com/auth/userinfo.email
+            clientAuthenticationMethod: POST
+          naver:
+            clientId: BXp5W2cgxUhwJI7PDYNI
+            clientSecret: SlJ5gtNSgr
+            redirectUri: "http://localhost:8080/auth/naver"
+            authorizationGrantType: authorization_code
+            clientName: naver
+            scope:
+              - name
+              - email
+              - profile_image
+            clientAuthenticationMethod: POST
+        provider:
+          kakao:
+            authorizationUri: https://kauth.kakao.com/oauth/authorize
+            tokenUri: https://kauth.kakao.com/oauth/token
+            userInfoUri: https://kapi.kakao.com/v2/user/me
+            userNameAttribute: id
+          google:
+            authorizationUri: https://accounts.google.com/o/oauth2/v2/auth
+            tokenUri: https://oauth2.googleapis.com/token
+            userInfoUri: https://www.googleapis.com/oauth2/v2/userinfo
+            userNameAttribute: sub
+          naver:
+            authorizationUri: https://nid.naver.com/oauth2.0/authorize
+            tokenUri: https://nid.naver.com/oauth2.0/token
+            userInfoUri: https://openapi.naver.com/v1/nid/me
+            userNameAttribute: response
+
+jwt:
+  header: Authorization
+  secret: dlrjssorkwwpdlfdjfudnjgksmsjwtdlswmdxhzmsqkdtlrdleksorkdlrjfrhdqnfmfgksmsepsjandjfudnsrjrkxek
+  token-validity-in-seconds: 86400
+
+logging:
+  level:
+    com.example: DEBUG
+
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true

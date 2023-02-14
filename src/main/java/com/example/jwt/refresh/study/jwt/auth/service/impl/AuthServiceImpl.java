@@ -27,6 +27,7 @@ import com.example.jwt.refresh.study.jwt.user.domain.repository.UserRepository;
 //import com.example.jwt.refresh.study.jwt.user.service.impl.UserDetailsServiceImpl;
 import com.example.jwt.refresh.study.jwt.user.service.impl.UserDetailsImpl;
 import com.example.jwt.refresh.study.jwt.user.service.impl.UserDetailsServiceImpl;
+import com.example.jwt.refresh.study.jwt.user.service.impl.principal.PrincipalDetailService;
 import com.example.jwt.refresh.study.jwt.user.service.impl.principal.PrincipalDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -66,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthTokenRepository authTokenRepository;
     private final InMemoryClientRegistrationRepository inMemoryClientRegistrationRepository;
     private final UserDetailsServiceImpl userDetailsService;
+    private final PrincipalDetailService principalDetailService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
@@ -260,12 +262,15 @@ public class AuthServiceImpl implements AuthService {
         accessTokenRefreshRequestDto.setAccessToken(jwtUtils.getAccessTokenFromBearer(
                 accessTokenRefreshRequestDto.getAccessToken()
         ));
+        log.info(jwtUtils.validateRefreshToken(accessTokenRefreshRequestDto.getRefreshToken()).toString());
         String username = jwtUtils.getUserNameFromAccessToken(accessTokenRefreshRequestDto.getAccessToken());
+        log.info(":::::"+username);
 
-        if(!userRepository.existsByUsername(username)) {
+        if(!memberRepository.existsByEmail(username)) {
             throw new UsernameNotFoundException(username);
         }
 
+        log.info(":::");
         if(!authTokenRepository.existsByAccessTokenAndSeq(accessTokenRefreshRequestDto.getAccessToken(),
                 accessTokenRefreshRequestDto.getRefreshToken())) {
             log.error("Refresh Token 이 만료되었습니다. 해당 토근 정보를 DB에서 제거합니다.");
@@ -273,13 +278,14 @@ public class AuthServiceImpl implements AuthService {
             throw new RestException(HttpStatus.valueOf(401), "RefreshToken이 만료되었습니다. 해당 " +
                     "토큰 정보를 DB에서 제거합니다.");
         }
-
-        UserDetailsImpl userDetails = userDetailsService.loadUserByUsername(username);
+        log.info("::::");
+        PrincipalDetails principalDetails = principalDetailService.loadUserByUsername(username);
+        log.info(principalDetails.toString());
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities()
+                principalDetails, null, principalDetails.getAuthorities()
         );
         String newAccessToken = jwtUtils.generateAccessToken(authenticationToken);
-
+        log.info(":::::");
         AuthToken authTokenEntity = authTokenRepository.findBySeq(accessTokenRefreshRequestDto.getRefreshToken())
                 .orElseThrow(() -> new RestException(HttpStatus.NOT_FOUND, "찾을 수 없어"));
 
