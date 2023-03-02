@@ -223,8 +223,8 @@ public class AuthController {
 
     }
 
-    @PostMapping("/kafka/{message}/{topic}")
-    public String sender(@PathVariable("message") final String message, @PathVariable("topic") final String topic) {
+    @PostMapping("/kafka/{message}/{topic}/{group}")
+    public String sender(@PathVariable("message") final String message, @PathVariable("topic") final String topic, @PathVariable("group") final String group) {
         Properties config = new Properties();
         config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         try (AdminClient adminClient = AdminClient.create(config)) {
@@ -235,7 +235,7 @@ public class AuthController {
             if(topicExists) {
                 log.info("이미 있는 topic");
                 kafkaSender.send(topic, message);
-                kafkaService.consume(topic, message);
+                kafkaService.consume(topic, group);
                 return "Published Success";
             } else {
                 log.info("없는 topic");
@@ -243,7 +243,7 @@ public class AuthController {
                 adminClient.createTopics(Collections.singletonList(newTopic));
 
                 kafkaSender.send(topic, message);
-                kafkaService.consume(topic, message);
+                kafkaService.consume(topic, group);
                 return "Published Success";
             }
         } catch (Exception e) {
