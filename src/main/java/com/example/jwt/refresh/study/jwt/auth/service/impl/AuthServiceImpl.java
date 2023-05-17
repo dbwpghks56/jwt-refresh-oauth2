@@ -505,6 +505,66 @@ public class AuthServiceImpl implements AuthService {
     }
 }
 
+/**
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            clientId: 91d5b55f188e990be8c696a0199c7259
+            clientSecret: Rs6oc7Ro8RtvUqJDM2P9oiCxKcSXZDud
+            scope:
+              - profile_nickname
+              - account_email
+              - profile_image
+            redirectUri: "http://localhost:3000/auth/kakao"
+#            redirectUri: "https://lcwebdev.bonobono.dev/auth/kakao"
+            authorizationGrantType: authorization_code
+            clientName: kakao
+            clientAuthenticationMethod: POST
+          google:
+            clientId: 166232324905-935267foqkcqt440tmgq752uh3k31vua.apps.googleusercontent.com
+            clientSecret: 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
+            redirectUri: "http://localhost:3000/auth/google"
+#            redirectUri: "https://lcwebdev.bonobono.dev/auth/google"
+            authorizationGrantType: authorization_code
+            clientName: google
+            scope:
+              - https://www.googleapis.com/auth/userinfo.profile
+              - https://www.googleapis.com/auth/userinfo.email
+            clientAuthenticationMethod: POST
+          naver:
+            clientId: hyl7a8awK1eNyp1rZ_E_
+            clientSecret: 9BFKx7Uqnl
+            redirectUri: "http://localhost:3000/auth/naver"
+#            redirectUri: "https://lcwebdev.bonobono.dev/auth/naver"
+            authorizationGrantType: authorization_code
+            clientName: naver
+            scope:
+              - name
+              - email
+              - profile_image
+            clientAuthenticationMethod: POST
+        provider:
+          kakao:
+            authorizationUri: https://kauth.kakao.com/oauth/authorize
+            tokenUri: https://kauth.kakao.com/oauth/token
+            userInfoUri: https://kapi.kakao.com/v2/user/me
+            userNameAttribute: id
+          google:
+            authorizationUri: https://accounts.google.com/o/oauth2/v2/auth
+            tokenUri: https://oauth2.googleapis.com/token
+            userInfoUri: https://www.googleapis.com/oauth2/v2/userinfo
+            userNameAttribute: sub
+          naver:
+            authorizationUri: https://nid.naver.com/oauth2.0/authorize
+            tokenUri: https://nid.naver.com/oauth2.0/token
+            userInfoUri: https://openapi.naver.com/v1/nid/me
+            userNameAttribute: response
+
+**/
+
 
 
 
