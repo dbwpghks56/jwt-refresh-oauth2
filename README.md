@@ -27,10 +27,16 @@ Anonymous 가 접근할 수 있어야 하는 API는 permitAll()을 선언했습�
 또한 ROLE_USER, ROLE_ADMIN, ROLE_TUTOR 권한 별 URL 제한했습니다.
 
 
+### OAuth2.0
+
+Naver, Google, Kakao의 유저 로그인 정보를 가져와 로그인을 진행한뒤 accessToken, refreshToken을 반환한다.
+
+
+
 ### WebSocket & Stomp
 
 실시간 챗봇과 페어프로그래밍에 WebSocket과 Stomp를 이용하여 실시간 통신기능을 개발한다.
 
-### Kafka(Message Queue)
+### Kafka(Message Queue로 사용)
 
-소켓 통신의 동시성과 데이터 안정성을 위해 메시지 큐를 이용해 관리한다.
+소켓 통신의 동시성과 데이터 안정성을 위해 메시지 큐로 이용해 관리한다.
